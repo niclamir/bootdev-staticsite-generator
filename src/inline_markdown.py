@@ -301,7 +301,7 @@ def extract_title(markdown):
     else:
         return markdown.split("\n")[0][1:].strip()
     
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, base_path):
 
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
 
@@ -327,10 +327,11 @@ def generate_page(from_path, template_path, dest_path):
     # Add Content
     template_file = template_file.replace("{{ Content }}", html_str)
 
-    # Write to destination path making sure directory exists
-    print(f"from: {from_path}")
-    print(f"dst: {dest_path}")
+    # Basepath support
+    template_file = template_file.replace('href="/', f'href="{base_path}')
+    template_file = template_file.replace('src="/', f'src="{base_path}')
 
+    # Write to destination path making sure directory exists
     if not os.path.exists(os.path.dirname(dest_path)):
         os.makedirs(os.path.dirname(dest_path))
 
@@ -338,7 +339,10 @@ def generate_page(from_path, template_path, dest_path):
         file.write(template_file)
         file.close()
 
-def generate_page_recursively(dir_path_content, template_path, dest_dir_path):
+def generate_page_recursively(dir_path_content, template_path, dest_dir_path, base_path, content_root=None):
+
+    if content_root is None:
+        content_root = dir_path_content
 
     # Iterate over source path
     for file in os.listdir(dir_path_content):
@@ -347,12 +351,13 @@ def generate_page_recursively(dir_path_content, template_path, dest_dir_path):
 
         # If path is a directory, recurse
         if os.path.isdir(src_entry):
-            generate_page_recursively(src_entry, template_path, dest_dir_path)     
+            generate_page_recursively(src_entry, template_path, dest_dir_path, base_path, content_root)     
         elif os.path.isfile(src_entry) and src_entry.endswith(".md"):
             # compute relative directory under content
-            rel_dir = os.path.relpath(os.path.dirname(src_entry), start="content")
+            rel_dir = os.path.relpath(os.path.dirname(src_entry), start=content_root)
+
             dest_dir = os.path.join(dest_dir_path, rel_dir)
             os.makedirs(dest_dir, exist_ok=True)
 
             dest_file = os.path.join(dest_dir, "index.html")
-            generate_page(src_entry, template_path, dest_file)
+            generate_page(src_entry, template_path, dest_file, base_path)
