@@ -7,8 +7,8 @@ def main():
     # Clean up public and copy from static
     copy_src_to_public("static/","public/")
 
-    # Generate page from template
-    generate_page("content/index.md", "template.html", "public/index.html")
+    # Generate pages recursively from template
+    generate_page_recursively("content/", "template.html", "public/")
 
 if __name__ == '__main__':
     main()

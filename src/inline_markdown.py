@@ -328,24 +328,31 @@ def generate_page(from_path, template_path, dest_path):
     template_file = template_file.replace("{{ Content }}", html_str)
 
     # Write to destination path making sure directory exists
+    print(f"from: {from_path}")
+    print(f"dst: {dest_path}")
+
     if not os.path.exists(os.path.dirname(dest_path)):
         os.makedirs(os.path.dirname(dest_path))
 
     with open(dest_path,"w") as file:
         file.write(template_file)
         file.close()
-    
-# Some standard library docs that might be helpful:
 
-# open
-# .read()
-# .close()
-# .replace()
-# os.path.dirname
-# os.makedirs
-# .startswith()
-# .split()
+def generate_page_recursively(dir_path_content, template_path, dest_dir_path):
 
+    # Iterate over source path
+    for file in os.listdir(dir_path_content):
 
+        src_entry = os.path.join(dir_path_content, file)
 
+        # If path is a directory, recurse
+        if os.path.isdir(src_entry):
+            generate_page_recursively(src_entry, template_path, dest_dir_path)     
+        elif os.path.isfile(src_entry) and src_entry.endswith(".md"):
+            # compute relative directory under content
+            rel_dir = os.path.relpath(os.path.dirname(src_entry), start="content")
+            dest_dir = os.path.join(dest_dir_path, rel_dir)
+            os.makedirs(dest_dir, exist_ok=True)
 
+            dest_file = os.path.join(dest_dir, "index.html")
+            generate_page(src_entry, template_path, dest_file)
